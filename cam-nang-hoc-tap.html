@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cẩm nang học tập</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.10.0/dist/tabler-icons.min.css">
+<style>
+  :root {
+    --bg: #ffffff; --bg2: #f7f7f5; --bg3: #f0f0ec;
+    --text: #1a1a18; --text2: #5a5a56; --text3: #9a9a94;
+    --border: rgba(0,0,0,0.1); --border2: rgba(0,0,0,0.18);
+    --info-bg: #e6f1fb; --info-text: #185fa5;
+    --radius: 10px; --radius-lg: 14px;
+    --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1e1e1c; --bg2: #282824; --bg3: #323230;
+      --text: #f0f0ea; --text2: #a0a09a; --text3: #606060;
+      --border: rgba(255,255,255,0.1); --border2: rgba(255,255,255,0.18);
+      --info-bg: #0c3a60; --info-text: #7bbdf4;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font); background: var(--bg3); color: var(--text); min-height: 100vh; }
+
+  /* Layout */
+  #app { display: flex; height: 100vh; max-width: 1100px; margin: 0 auto; background: var(--bg); border-left: 0.5px solid var(--border); border-right: 0.5px solid var(--border); }
+
+  /* Sidebar */
+  #sidebar { width: 210px; min-width: 210px; border-right: 0.5px solid var(--border); display: flex; flex-direction: column; background: var(--bg2); }
+  #sidebar-brand { padding: 16px 14px 12px; border-bottom: 0.5px solid var(--border); display: flex; align-items: center; gap: 8px; }
+  #sidebar-brand i { font-size: 20px; color: #BA7517; }
+  #sidebar-brand span { font-size: 14px; font-weight: 500; color: var(--text); }
+  #sidebar-top { padding: 12px 12px 6px; display: flex; align-items: center; justify-content: space-between; }
+  #sidebar-top small { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: .06em; font-weight: 500; }
+  #btn-stats { background: none; border: none; cursor: pointer; color: var(--text3); font-size: 17px; padding: 2px 4px; border-radius: 6px; }
+  #btn-stats:hover { background: var(--bg3); color: var(--text); }
+  #tag-list { flex: 1; overflow-y: auto; padding: 4px 6px; }
+  .tag-item { display: flex; align-items: center; gap: 8px; padding: 7px 8px; border-radius: var(--radius); cursor: pointer; font-size: 13px; color: var(--text2); transition: background .1s; }
+  .tag-item:hover { background: var(--bg); }
+  .tag-item.active { background: var(--bg); color: var(--text); font-weight: 500; }
+  .tag-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .tag-count { margin-left: auto; font-size: 11px; color: var(--text3); }
+  #sidebar-footer { padding: 10px 8px; border-top: 0.5px solid var(--border); display: flex; gap: 6px; }
+  .footer-btn { flex: 1; padding: 6px 0; font-size: 12px; border-radius: var(--radius); cursor: pointer; border: 0.5px solid var(--border2); color: var(--text2); background: none; display: flex; align-items: center; justify-content: center; gap: 4px; font-family: var(--font); transition: background .1s; }
+  .footer-btn:hover { background: var(--bg3); }
+  #btn-import { display: none; }
+
+  /* Main */
+  #main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  #topbar { padding: 10px 14px; border-bottom: 0.5px solid var(--border); display: flex; gap: 8px; align-items: center; }
+  #search-wrap { flex: 1; position: relative; }
+  #search-wrap i { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); font-size: 15px; color: var(--text3); pointer-events: none; }
+  #search { width: 100%; padding: 7px 10px 7px 30px; font-size: 13px; border-radius: var(--radius); border: 0.5px solid var(--border2); background: var(--bg2); color: var(--text); font-family: var(--font); outline: none; }
+  #search:focus { border-color: #185fa5; background: var(--bg); }
+  #btn-new { padding: 7px 14px; font-size: 13px; border-radius: var(--radius); cursor: pointer; background: var(--info-bg); color: var(--info-text); border: none; font-weight: 500; white-space: nowrap; font-family: var(--font); display: flex; align-items: center; gap: 5px; }
+  #btn-new:hover { opacity: .88; }
+  #content { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+  .empty-state { text-align: center; padding: 80px 20px; color: var(--text3); font-size: 13px; }
+  .empty-state i { font-size: 36px; display: block; margin-bottom: 12px; opacity: .35; }
+
+  /* Note cards */
+  .note-card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 12px 14px; cursor: pointer; transition: border-color .15s; }
+  .note-card:hover { border-color: var(--border2); }
+  .note-card.pinned { border-left: 3px solid #BA7517; }
+  .note-card-top { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 4px; }
+  .note-type-icon { font-size: 15px; margin-top: 1px; flex-shrink: 0; }
+  .note-title { font-size: 13px; font-weight: 500; flex: 1; }
+  .pin-label { font-size: 10px; color: #BA7517; font-weight: 500; margin-left: 5px; }
+  .note-actions { display: flex; gap: 3px; flex-shrink: 0; }
+  .icon-btn { background: none; border: none; cursor: pointer; color: var(--text3); font-size: 14px; padding: 2px 3px; border-radius: 5px; }
+  .icon-btn:hover { color: var(--text); background: var(--bg2); }
+  .icon-btn.pinned-on { color: #BA7517; }
+  .note-preview { font-size: 12px; color: var(--text2); line-height: 1.5; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .note-preview-code { font-family: var(--mono); font-size: 11px; background: var(--bg2); border-radius: 6px; padding: 5px 8px; color: var(--text); white-space: pre; overflow: hidden; max-height: 38px; text-overflow: ellipsis; margin-bottom: 6px; }
+  .note-meta { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
+  .badge { font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 500; }
+  .note-date { font-size: 11px; color: var(--text3); margin-left: auto; }
+
+  /* Status bar */
+  #statusbar { padding: 5px 14px; border-top: 0.5px solid var(--border); font-size: 11px; color: var(--text3); display: flex; gap: 10px; }
+
+  /* Overlays */
+  .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 100; align-items: center; justify-content: center; }
+  .overlay.open { display: flex; }
+  .modal { background: var(--bg); border-radius: var(--radius-lg); border: 0.5px solid var(--border); padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+
+  /* Editor */
+  #editor-box { width: 520px; max-width: 95vw; }
+  #editor-box h3 { font-size: 15px; font-weight: 500; }
+  #ed-title { width: 100%; padding: 8px 10px; font-size: 14px; border-radius: var(--radius); border: 0.5px solid var(--border2); background: var(--bg2); color: var(--text); font-family: var(--font); outline: none; }
+  #ed-title:focus { border-color: #185fa5; background: var(--bg); }
+  #ed-content { width: 100%; padding: 9px 10px; font-size: 13px; border-radius: var(--radius); border: 0.5px solid var(--border2); background: var(--bg2); color: var(--text); font-family: var(--font); resize: vertical; min-height: 110px; line-height: 1.6; outline: none; }
+  #ed-content:focus { border-color: #185fa5; background: var(--bg); }
+  #ed-content.code-mode { font-family: var(--mono); font-size: 12px; }
+  .ed-row { display: flex; gap: 8px; }
+  #ed-type, #ed-tag { flex: 1; padding: 7px 9px; font-size: 13px; border-radius: var(--radius); border: 0.5px solid var(--border2); background: var(--bg2); color: var(--text); font-family: var(--font); outline: none; }
+  .ed-actions { display: flex; gap: 8px; justify-content: flex-end; }
+  .btn-secondary { padding: 7px 14px; font-size: 13px; border-radius: var(--radius); cursor: pointer; border: 0.5px solid var(--border2); background: none; color: var(--text2); font-family: var(--font); }
+  .btn-primary { padding: 7px 14px; font-size: 13px; border-radius: var(--radius); cursor: pointer; background: var(--info-bg); color: var(--info-text); border: none; font-weight: 500; font-family: var(--font); }
+  .btn-primary:hover { opacity: .88; }
+
+  /* Stats */
+  #stats-box { width: 420px; max-width: 95vw; }
+  #stats-box h3 { font-size: 15px; font-weight: 500; }
+  .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; }
+  .stat-card { background: var(--bg2); border-radius: var(--radius); padding: 12px 8px; text-align: center; }
+  .stat-num { font-size: 22px; font-weight: 500; }
+  .stat-lbl { font-size: 11px; color: var(--text2); margin-top: 2px; }
+  .stats-section-title { font-size: 12px; font-weight: 500; color: var(--text2); }
+  .stats-tags { display: flex; flex-direction: column; gap: 6px; }
+  .stats-tag-row { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+  .stats-tag-name { width: 100px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .stats-bar-wrap { flex: 1; height: 6px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
+  .stats-bar { height: 100%; border-radius: 3px; }
+  .stats-tag-cnt { width: 20px; text-align: right; color: var(--text3); }
+
+  /* Toast */
+  #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--bg); border: 0.5px solid var(--border2); border-radius: var(--radius); padding: 8px 18px; font-size: 13px; color: var(--text); opacity: 0; transition: opacity .2s; pointer-events: none; white-space: nowrap; z-index: 200; box-shadow: 0 4px 16px rgba(0,0,0,.12); }
+  #toast.show { opacity: 1; }
+
+  /* Mobile */
+  @media (max-width: 600px) {
+    #sidebar { width: 160px; min-width: 160px; }
+    #app { height: auto; min-height: 100vh; flex-direction: column; }
+    #sidebar { width: 100%; min-width: unset; height: auto; border-right: none; border-bottom: 0.5px solid var(--border); }
+    #tag-list { display: flex; flex-direction: row; flex-wrap: wrap; gap: 4px; padding: 6px; }
+    .tag-item { padding: 4px 10px; }
+    #main { flex: 1; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="sidebar">
+    <div id="sidebar-brand">
+      <i class="ti ti-notebook"></i>
+      <span>Cẩm nang học tập</span>
+    </div>
+    <div id="sidebar-top">
+      <small>Chủ đề</small>
+      <button id="btn-stats" title="Thống kê"><i class="ti ti-chart-bar"></i></button>
+    </div>
+    <div id="tag-list"></div>
+    <div id="sidebar-footer">
+      <button class="footer-btn" id="btn-export"><i class="ti ti-download"></i>Export</button>
+      <label class="footer-btn" id="btn-import-lbl"><i class="ti ti-upload"></i>Import<input id="btn-import" type="file" accept=".json"></label>
+    </div>
+  </div>
+
+  <div id="main">
+    <div id="topbar">
+      <div id="search-wrap">
+        <i class="ti ti-search"></i>
+        <input id="search" type="text" placeholder="Tìm kiếm tiêu đề, nội dung, chủ đề..." />
+      </div>
+      <button id="btn-new"><i class="ti ti-plus"></i> Ghi chú mới</button>
+    </div>
+    <div id="content"></div>
+    <div id="statusbar"><span id="st-count"></span><span id="st-save"></span></div>
+  </div>
+</div>
+
+<!-- Editor -->
+<div class="overlay" id="editor-overlay">
+  <div class="modal" id="editor-box">
+    <h3 id="ed-heading">Ghi chú mới</h3>
+    <input id="ed-title" type="text" placeholder="Tiêu đề..." />
+    <textarea id="ed-content" placeholder="Nội dung, code, link..."></textarea>
+    <div class="ed-row">
+      <select id="ed-type">
+        <option value="text">📝 Văn bản</option>
+        <option value="code">💻 Code / kỹ thuật</option>
+        <option value="link">🔗 Link / tài liệu</option>
+        <option value="image">🖼 Hình ảnh / sơ đồ</option>
+      </select>
+      <input id="ed-tag" type="text" placeholder="Chủ đề (vd: Python, AI...)" />
+    </div>
+    <div class="ed-actions">
+      <button class="btn-secondary" id="btn-cancel">Hủy</button>
+      <button class="btn-primary" id="btn-save">Lưu ghi chú</button>
+    </div>
+  </div>
+</div>
+
+<!-- Stats -->
+<div class="overlay" id="stats-overlay">
+  <div class="modal" id="stats-box">
+    <h3>Thống kê học tập</h3>
+    <div class="stats-grid" id="stats-grid"></div>
+    <div class="stats-section-title">Phân bố theo chủ đề</div>
+    <div class="stats-tags" id="stats-tags"></div>
+    <div class="ed-actions"><button class="btn-secondary" id="btn-close-stats">Đóng</button></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const TYPE_META = {
+  text:  { icon: 'ti-file-text', label: 'Văn bản', color: '#3B6D11', bg: '#EAF3DE' },
+  code:  { icon: 'ti-code',      label: 'Code',    color: '#0C447C', bg: '#ddeef9' },
+  link:  { icon: 'ti-link',      label: 'Link',    color: '#533489', bg: '#EEEDFE' },
+  image: { icon: 'ti-photo',     label: 'Hình ảnh',color: '#993C1D', bg: '#FAECE7' },
+};
+const TAG_COLORS = ['#1D9E75','#185FA5','#7F77DD','#D85A30','#D4537E','#639922','#BA7517','#E24B4A'];
+const tagColorMap = {}; let colorIdx = 0;
+function tagColor(t) { if (!tagColorMap[t]) tagColorMap[t] = TAG_COLORS[colorIdx++ % TAG_COLORS.length]; return tagColorMap[t]; }
+
+const STORAGE_KEY = 'cam_nang_v2';
+let notes = [], activeTag = '__all__', editingId = null, searchQ = '', saveTimer = null;
+
+function load() {
+  try { const d = localStorage.getItem(STORAGE_KEY); if (d) notes = JSON.parse(d); } catch(e) { notes = []; }
+  if (!notes.length) seed();
+  render();
+}
+function seed() {
+  notes = [
+    { id: uid(), title: 'Big O Notation', content: 'O(1) hằng số\nO(n) tuyến tính\nO(n²) bình phương\nDùng để đánh giá độ phức tạp của thuật toán theo kích thước đầu vào n.', type: 'code', tag: 'Thuật toán', date: Date.now() - 86400000, pinned: true },
+    { id: uid(), title: 'Attention mechanism', content: 'Cho phép model tập trung vào các phần khác nhau của input khi sinh output. Đây là nền tảng của kiến trúc Transformer trong deep learning.', type: 'text', tag: 'AI / ML', date: Date.now() - 3600000, pinned: false },
+    { id: uid(), title: 'Python docs chính thức', content: 'https://docs.python.org/3/\nTham khảo khi cần tra cú pháp, built-in functions, thư viện chuẩn.', type: 'link', tag: 'Python', date: Date.now() - 7200000, pinned: false },
+  ];
+}
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+
+function persist() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+    const el = document.getElementById('st-save');
+    el.textContent = 'Đã lưu ✓';
+    setTimeout(() => el.textContent = '', 2000);
+  }, 400);
+}
+
+function getTags() { const m = {}; notes.forEach(n => { const t = n.tag || 'Chưa phân loại'; m[t] = (m[t] || 0) + 1; }); return m; }
+function filtered() {
+  return notes.filter(n => {
+    const tag = n.tag || 'Chưa phân loại';
+    const matchTag = activeTag === '__all__' || tag === activeTag;
+    const q = searchQ.toLowerCase();
+    const matchQ = !q || (n.title||'').toLowerCase().includes(q) || (n.content||'').toLowerCase().includes(q) || tag.toLowerCase().includes(q);
+    return matchTag && matchQ;
+  }).sort((a,b) => (b.pinned?1:0)-(a.pinned?1:0) || b.date-a.date);
+}
+function fmtDate(ts) {
+  const d = new Date(ts), now = new Date();
+  if (d.toDateString() === now.toDateString()) return d.toLocaleTimeString('vi-VN', {hour:'2-digit',minute:'2-digit'});
+  return d.toLocaleDateString('vi-VN', {day:'2-digit',month:'2-digit',year:'2-digit'});
+}
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function render() { renderSidebar(); renderNotes(); document.getElementById('st-count').textContent = notes.length + ' ghi chú'; }
+
+function renderSidebar() {
+  const tags = getTags();
+  let html = `<div class="tag-item${activeTag==='__all__'?' active':''}" data-tag="__all__"><span class="tag-dot" style="background:#888"></span>Tất cả<span class="tag-count">${notes.length}</span></div>`;
+  Object.entries(tags).sort().forEach(([tag,cnt]) => {
+    const col = tagColor(tag);
+    html += `<div class="tag-item${activeTag===tag?' active':''}" data-tag="${esc(tag)}"><span class="tag-dot" style="background:${col}"></span>${esc(tag)}<span class="tag-count">${cnt}</span></div>`;
+  });
+  document.getElementById('tag-list').innerHTML = html;
+  document.querySelectorAll('.tag-item').forEach(el => el.addEventListener('click', () => { activeTag = el.dataset.tag; render(); }));
+}
+
+function renderNotes() {
+  const list = filtered();
+  const el = document.getElementById('content');
+  if (!list.length) {
+    el.innerHTML = `<div class="empty-state"><i class="ti ti-notebook"></i>Chưa có ghi chú nào.<br>Nhấn <strong>Ghi chú mới</strong> để bắt đầu!</div>`;
+    return;
+  }
+  el.innerHTML = list.map(n => {
+    const m = TYPE_META[n.type] || TYPE_META.text;
+    const tag = n.tag || 'Chưa phân loại'; const col = tagColor(tag);
+    const isCode = n.type === 'code';
+    const preview = isCode
+      ? `<div class="note-preview-code">${esc((n.content||'').slice(0,150))}</div>`
+      : `<div class="note-preview">${esc((n.content||'').replace(/\n/g,' ').slice(0,130))}</div>`;
+    return `<div class="note-card${n.pinned?' pinned':''}" data-id="${n.id}">
+      <div class="note-card-top">
+        <i class="ti ${m.icon} note-type-icon" style="color:${m.color}"></i>
+        <span class="note-title">${esc(n.title||'Không tiêu đề')}${n.pinned?'<span class="pin-label">📌 Đã ghim</span>':''}</span>
+        <div class="note-actions">
+          <button class="icon-btn${n.pinned?' pinned-on':''}" data-pin="${n.id}" title="${n.pinned?'Bỏ ghim':'Ghim'}"><i class="ti ti-pin"></i></button>
+          <button class="icon-btn" data-del="${n.id}" title="Xóa"><i class="ti ti-trash"></i></button>
+        </div>
+      </div>
+      ${preview}
+      <div class="note-meta">
+        <span class="badge" style="background:${m.bg};color:${m.color}">${m.label}</span>
+        <span class="badge" style="background:${col}22;color:${col}">${esc(tag)}</span>
+        <span class="note-date">${fmtDate(n.date)}</span>
+      </div>
+    </div>`;
+  }).join('');
+  document.querySelectorAll('.note-card').forEach(card => {
+    card.addEventListener('click', e => { if (e.target.closest('[data-del]') || e.target.closest('[data-pin]')) return; openEditor(card.dataset.id); });
+  });
+  document.querySelectorAll('[data-del]').forEach(btn => btn.addEventListener('click', e => { e.stopPropagation(); deleteNote(btn.dataset.del); }));
+  document.querySelectorAll('[data-pin]').forEach(btn => btn.addEventListener('click', e => { e.stopPropagation(); togglePin(btn.dataset.pin); }));
+}
+
+function openEditor(id) {
+  editingId = id || null;
+  const n = id ? notes.find(x => x.id === id) : null;
+  document.getElementById('ed-heading').textContent = id ? 'Chỉnh sửa ghi chú' : 'Ghi chú mới';
+  document.getElementById('ed-title').value = n?.title || '';
+  document.getElementById('ed-content').value = n?.content || '';
+  document.getElementById('ed-type').value = n?.type || 'text';
+  document.getElementById('ed-tag').value = n?.tag || (activeTag !== '__all__' ? activeTag : '');
+  updateEditorMode(n?.type || 'text');
+  document.getElementById('editor-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('ed-title').focus(), 50);
+}
+function updateEditorMode(type) {
+  const ta = document.getElementById('ed-content');
+  ta.classList.toggle('code-mode', type === 'code');
+  ta.placeholder = type === 'code' ? '// Dán code vào đây...' : (type === 'link' ? 'https://...' : 'Nội dung ghi chú...');
+}
+function closeEditor() { document.getElementById('editor-overlay').classList.remove('open'); editingId = null; }
+function saveNote() {
+  const title = document.getElementById('ed-title').value.trim();
+  const content = document.getElementById('ed-content').value.trim();
+  const type = document.getElementById('ed-type').value;
+  const tag = document.getElementById('ed-tag').value.trim() || 'Chưa phân loại';
+  if (!title && !content) { showToast('Nhập tiêu đề hoặc nội dung!'); return; }
+  if (editingId) {
+    const idx = notes.findIndex(x => x.id === editingId);
+    if (idx > -1) notes[idx] = { ...notes[idx], title, content, type, tag, date: Date.now() };
+  } else {
+    notes.unshift({ id: uid(), title, content, type, tag, date: Date.now(), pinned: false });
+  }
+  closeEditor(); persist(); render();
+  showToast(editingId ? 'Đã cập nhật!' : 'Đã lưu ghi chú!');
+}
+function deleteNote(id) {
+  if (!confirm('Xóa ghi chú này?')) return;
+  notes = notes.filter(x => x.id !== id); persist(); render(); showToast('Đã xóa.');
+}
+function togglePin(id) {
+  const n = notes.find(x => x.id === id);
+  if (n) { n.pinned = !n.pinned; persist(); render(); showToast(n.pinned ? '📌 Đã ghim!' : 'Đã bỏ ghim.'); }
+}
+
+function showStats() {
+  const tags = getTags(); const total = notes.length;
+  const pinned = notes.filter(n => n.pinned).length;
+  const byType = {}; notes.forEach(n => { byType[n.type] = (byType[n.type] || 0) + 1; });
+  document.getElementById('stats-grid').innerHTML = `
+    <div class="stat-card"><div class="stat-num">${total}</div><div class="stat-lbl">Tổng ghi chú</div></div>
+    <div class="stat-card"><div class="stat-num">${pinned}</div><div class="stat-lbl">Đã ghim</div></div>
+    <div class="stat-card"><div class="stat-num">${byType.code||0}</div><div class="stat-lbl">Code</div></div>
+    <div class="stat-card"><div class="stat-num">${Object.keys(tags).length}</div><div class="stat-lbl">Chủ đề</div></div>`;
+  const sorted = Object.entries(tags).sort((a,b) => b[1]-a[1]).slice(0,7);
+  const max = sorted[0]?.[1] || 1;
+  document.getElementById('stats-tags').innerHTML = sorted.map(([tag,cnt]) => {
+    const col = tagColor(tag); const pct = Math.round(cnt/max*100);
+    return `<div class="stats-tag-row"><span class="stats-tag-name">${esc(tag)}</span><div class="stats-bar-wrap"><div class="stats-bar" style="width:${pct}%;background:${col}"></div></div><span class="stats-tag-cnt">${cnt}</span></div>`;
+  }).join('');
+  document.getElementById('stats-overlay').classList.add('open');
+}
+
+function exportData() {
+  const blob = new Blob([JSON.stringify(notes, null, 2)], {type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'cam-nang-' + new Date().toISOString().slice(0,10) + '.json'; a.click();
+  showToast('Đã xuất file backup!');
+}
+function importData(file) {
+  const r = new FileReader();
+  r.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!Array.isArray(data)) throw new Error();
+      const merged = new Map(); notes.forEach(n => merged.set(n.id, n)); data.forEach(n => merged.set(n.id, n));
+      notes = Array.from(merged.values()); persist(); render();
+      showToast(`Đã import ${data.length} ghi chú!`);
+    } catch { showToast('File không hợp lệ.'); }
+  };
+  r.readAsText(file);
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+document.getElementById('btn-new').addEventListener('click', () => openEditor(null));
+document.getElementById('btn-cancel').addEventListener('click', closeEditor);
+document.getElementById('btn-save').addEventListener('click', saveNote);
+document.getElementById('editor-overlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeEditor(); });
+document.getElementById('ed-type').addEventListener('change', e => updateEditorMode(e.target.value));
+document.getElementById('search').addEventListener('input', e => { searchQ = e.target.value; render(); });
+document.getElementById('btn-stats').addEventListener('click', showStats);
+document.getElementById('btn-close-stats').addEventListener('click', () => document.getElementById('stats-overlay').classList.remove('open'));
+document.getElementById('stats-overlay').addEventListener('click', e => { if (e.target === e.currentTarget) document.getElementById('stats-overlay').classList.remove('open'); });
+document.getElementById('btn-export').addEventListener('click', exportData);
+document.getElementById('btn-import').addEventListener('change', e => { if (e.target.files[0]) importData(e.target.files[0]); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeEditor(); document.getElementById('stats-overlay').classList.remove('open'); } });
+
+load();
+</script>
+</body>
+</html>
